@@ -1,0 +1,4 @@
+../TCP_App/Src/uart_debug.c:19:6:uart_debug_init	8	static
+../TCP_App/Src/uart_debug.c:29:6:uart_debug_print	300	static
+../TCP_App/Src/uart_debug.c:52:5:_write	24	static
+../TCP_App/Src/uart_debug.c:58:5:__io_putchar	16	static

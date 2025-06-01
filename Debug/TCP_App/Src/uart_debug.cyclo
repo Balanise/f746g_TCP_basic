@@ -1,0 +1,4 @@
+../TCP_App/Src/uart_debug.c:19:6:uart_debug_init	1
+../TCP_App/Src/uart_debug.c:29:6:uart_debug_print	2
+../TCP_App/Src/uart_debug.c:52:5:_write	1
+../TCP_App/Src/uart_debug.c:58:5:__io_putchar	1

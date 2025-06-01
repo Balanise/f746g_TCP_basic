@@ -29,4 +29,5 @@ Drivers/STM32F7xx_HAL_Driver \
 LWIP/App \
 LWIP/Target \
 Middlewares/LwIP \
+TCP_App/Src \
 

@@ -1,0 +1,3 @@
+../TCP_App/Src/app_ethernet.c:21:6:app_ethernet_init	8	static
+../TCP_App/Src/app_ethernet.c:28:6:app_ethernet_process	16	static
+../TCP_App/Src/app_ethernet.c:56:18:app_ethernet_get_link_state	4	static

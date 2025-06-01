@@ -9,6 +9,7 @@ RM := rm -rf
 
 # All of the sources participating in the build are defined here
 -include sources.mk
+-include TCP_App/Src/subdir.mk
 -include Middlewares/LwIP/subdir.mk
 -include LWIP/Target/subdir.mk
 -include LWIP/App/subdir.mk
@@ -64,8 +65,8 @@ all: main-build
 main-build: f746g_TCP_IP_basic.elf secondary-outputs
 
 # Tool invocations
-f746g_TCP_IP_basic.elf f746g_TCP_IP_basic.map: $(OBJS) $(USER_OBJS) C:\Users\batuh\Desktop\Batuhan\Projects\f746g_TCP_IP_basic\STM32F746NGHX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
-	arm-none-eabi-gcc -o "f746g_TCP_IP_basic.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m7 -T"C:\Users\batuh\Desktop\Batuhan\Projects\f746g_TCP_IP_basic\STM32F746NGHX_FLASH.ld" --specs=nosys.specs -Wl,-Map="f746g_TCP_IP_basic.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv5-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
+f746g_TCP_IP_basic.elf f746g_TCP_IP_basic.map: $(OBJS) $(USER_OBJS) C:\Users\batuh\Desktop\Batuhan\Projects\f746g_TCP_basic\STM32F746NGHX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
+	arm-none-eabi-gcc -o "f746g_TCP_IP_basic.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m7 -T"C:\Users\batuh\Desktop\Batuhan\Projects\f746g_TCP_basic\STM32F746NGHX_FLASH.ld" --specs=nosys.specs -Wl,-Map="f746g_TCP_IP_basic.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv5-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
 	@echo 'Finished building target: $@'
 	@echo ' '
 

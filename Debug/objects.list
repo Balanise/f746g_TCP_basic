@@ -107,3 +107,6 @@
 "./Middlewares/LwIP/utils.o"
 "./Middlewares/LwIP/vj.o"
 "./Middlewares/LwIP/zepif.o"
+"./TCP_App/Src/TCP_client.o"
+"./TCP_App/Src/app_ethernet.o"
+"./TCP_App/Src/uart_debug.o"
