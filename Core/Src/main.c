@@ -24,6 +24,9 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include "app_ethernet.h"
+#include "TCP_client.h"
+#include "uart_debug.h"
 
 /* USER CODE END Includes */
 
@@ -64,8 +67,7 @@ static void MPU_Config(void);
   * @brief  The application entry point.
   * @retval int
   */
-int main(void)
-{
+int main(void){
 
   /* USER CODE BEGIN 1 */
 
@@ -95,16 +97,42 @@ int main(void)
   MX_USART1_UART_Init();
   MX_LWIP_Init();
   /* USER CODE BEGIN 2 */
+  /* Process until connected */
+  while (tcp_client_get_state() != TCP_STATE_CONNECTED) {
+      MX_LWIP_Process();
+      app_ethernet_process();
+      tcp_client_process();
+      HAL_Delay(10);
+  }
+
+  /* Connected */
+  const char *welcome_msg = "STM32F746G Discovery Board Connected!\r\n"
+                           "System initialized and ready.\r\n"
+                           "Enter your message: \r\n";
+  tcp_client_send(welcome_msg, strlen(welcome_msg));
 
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-  while (1)
-  {
-    /* USER CODE END WHILE */
+  while (1){
+	  MX_LWIP_Process();
+	  app_ethernet_process();
+	  tcp_client_process();
 
-    /* USER CODE BEGIN 3 */
+	  /* Check for received data */
+	  if (tcp_client_data_available() > 0) {
+		  char buffer[256];
+		  int len = tcp_client_read_string(buffer, sizeof(buffer));
+
+		  if (len > 0) {
+			  DEBUG_INFO("Received: %s", buffer);
+
+			  /* Echo back or send custom response */
+			  tcp_client_send("ACK: ", 5);
+			  tcp_client_send(buffer, len);
+		  }
+	  }
   }
   /* USER CODE END 3 */
 }
