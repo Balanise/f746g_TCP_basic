@@ -89,7 +89,6 @@ int main(void){
   SystemClock_Config();
 
   /* USER CODE BEGIN SysInit */
-
   /* USER CODE END SysInit */
 
   /* Initialize all configured peripherals */
@@ -97,6 +96,9 @@ int main(void){
   MX_USART1_UART_Init();
   MX_LWIP_Init();
   /* USER CODE BEGIN 2 */
+  uart_debug_init();      // Initialize debug UART
+  app_ethernet_init();    // Initialize Ethernet app
+  tcp_client_init();      // Initialize TCP client
   /* Process until connected */
   while (tcp_client_get_state() != TCP_STATE_CONNECTED) {
       MX_LWIP_Process();
@@ -106,11 +108,10 @@ int main(void){
   }
 
   /* Connected */
-  const char *welcome_msg = "STM32F746G Discovery Board Connected!\r\n"
-                           "System initialized and ready.\r\n"
-                           "Enter your message: \r\n";
+  const char *welcome_msg = "Sending data using TCP ... \r\n";
   tcp_client_send(welcome_msg, strlen(welcome_msg));
-
+  uint32_t counter = 0;
+  uint32_t last_send_time = 0;
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -120,17 +121,16 @@ int main(void){
 	  app_ethernet_process();
 	  tcp_client_process();
 
-	  /* Check for received data */
-	  if (tcp_client_data_available() > 0) {
-		  char buffer[256];
-		  int len = tcp_client_read_string(buffer, sizeof(buffer));
+	  /* Send counter every 1 second */
+	  if (HAL_GetTick() - last_send_time >= 1000) {
+		  last_send_time = HAL_GetTick();
 
-		  if (len > 0) {
-			  DEBUG_INFO("Received: %s", buffer);
-
-			  /* Echo back or send custom response */
-			  tcp_client_send("ACK: ", 5);
-			  tcp_client_send(buffer, len);
+		  /* Check if still connected */
+		  if (tcp_client_get_state() == TCP_STATE_CONNECTED) {
+			  counter++;
+			  char msg[50];
+			  snprintf(msg, sizeof(msg), "counter:%lu\r\n", counter);
+			  tcp_client_send(msg, strlen(msg));
 		  }
 	  }
   }

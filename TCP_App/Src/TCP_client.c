@@ -14,8 +14,8 @@ static uint32_t reconnect_timer = 0;
 
 /* Circular buffer for received data */
 static char rx_buffer[TCP_RX_BUFFER_SIZE];
-static volatile uint16_t rx_head = 0;  /* Write position */
-static volatile uint16_t rx_tail = 0;  /* Read position */
+static volatile uint16_t rx_len = 0;
+static volatile uint8_t rx_data_ready = 0;
 
 /* Initialize TCP client */
 void tcp_client_init(void){
@@ -24,11 +24,9 @@ void tcp_client_init(void){
     client_state = TCP_STATE_DISCONNECTED;
 
     /* Clear receive buffer */
-    rx_head = 0;
-    rx_tail = 0;
     memset(rx_buffer, 0, TCP_RX_BUFFER_SIZE);
-
-    DEBUG_INFO("TCP Client initialized. Server: %s:%d\r\n", TCP_SERVER_IP, TCP_SERVER_PORT);
+    rx_len = 0;
+    rx_data_ready = 0;
 }
 
 /* Connect to TCP server */
@@ -117,54 +115,25 @@ tcp_client_state_t tcp_client_get_state(void){
 
 /* Read string from receive buffer */
 int tcp_client_read_string(char *buffer, uint16_t max_len){
-    uint16_t i = 0;
-    uint16_t tail = rx_tail;
-
-    if (buffer == NULL || max_len == 0) {
-        return -1;
+    if (buffer == NULL || max_len == 0 || !rx_data_ready) {
+        return 0;
     }
 
-    /* Clear the output buffer */
-    memset(buffer, 0, max_len);
+    /* Copy data */
+    uint16_t copy_len = (rx_len < max_len - 1) ? rx_len : max_len - 1;
+    memcpy(buffer, rx_buffer, copy_len);
+    buffer[copy_len] = '\0';
 
-    /* Check if data available */
-    if (tail == rx_head) {
-        return 0;  /* No data available */
-    }
+    /* Clear the flag and buffer */
+    rx_data_ready = 0;
+    rx_len = 0;
 
-    /* Read until newline, buffer full, or no more data */
-    while (i < (max_len - 1) && tail != rx_head) {
-        char c = rx_buffer[tail];
-        buffer[i++] = c;
-
-        /* Update tail position */
-        tail = (tail + 1) % TCP_RX_BUFFER_SIZE;
-
-        /* Stop at newline */
-        if (c == '\n') {
-            break;
-        }
-    }
-
-    /* Update the actual tail position */
-    rx_tail = tail;
-
-    /* Null terminate */
-    buffer[i] = '\0';
-
-    return i;  /* Return number of bytes read */
+    return copy_len;
 }
 
 /* Get number of bytes available in receive buffer */
 uint16_t tcp_client_data_available(void){
-    uint16_t head = rx_head;
-    uint16_t tail = rx_tail;
-
-    if (head >= tail) {
-        return head - tail;
-    } else {
-        return TCP_RX_BUFFER_SIZE - tail + head;
-    }
+    return rx_data_ready ? rx_len : 0;
 }
 
 /* Callback: Error occurred */
@@ -183,49 +152,39 @@ static err_t tcp_client_sent(void *arg, struct tcp_pcb *tpcb, u16_t len){
 /* Callback: Data received from server */
 static err_t tcp_client_recv(void *arg, struct tcp_pcb *tpcb, struct pbuf *p, err_t err){
     if (p != NULL) {
-        /* Store received data in circular buffer */
+        /* Copy data to buffer if there's room */
         struct pbuf *q;
-        for (q = p; q != NULL; q = q->next) {
-            uint8_t *data = (uint8_t *)q->payload;
-            uint16_t len = q->len;
+        uint16_t pos = 0;
 
-            for (uint16_t i = 0; i < len; i++) {
-                uint16_t next_head = (rx_head + 1) % TCP_RX_BUFFER_SIZE;
-
-                if (next_head != rx_tail) {
-                    rx_buffer[rx_head] = data[i];
-                    rx_head = next_head;
-                } else {
-                    DEBUG_INFO("RX buffer overflow!\r\n");
-                    break;
-                }
+        for (q = p; q != NULL && pos < TCP_RX_BUFFER_SIZE - 1; q = q->next) {
+            uint16_t copy_len = q->len;
+            if (pos + copy_len > TCP_RX_BUFFER_SIZE - 1) {
+                copy_len = TCP_RX_BUFFER_SIZE - 1 - pos;
             }
+
+            memcpy(rx_buffer + pos, q->payload, copy_len);
+            pos += copy_len;
         }
+
+        rx_buffer[pos] = '\0';
+        rx_len = pos;
+        rx_data_ready = 1;
 
         /* Free the buffer */
         tcp_recved(tpcb, p->tot_len);
         pbuf_free(p);
     } else {
         /* Connection closed by server */
-        DEBUG_INFO("Server closed connection\r\n");
         tcp_client_disconnect();
     }
 
     return ERR_OK;
 }
-
 /* Callback: Connected */
 static err_t tcp_client_connected(void *arg, struct tcp_pcb *tpcb, err_t err){
     if (err == ERR_OK) {
         client_state = TCP_STATE_CONNECTED;
-        DEBUG_INFO("Connected to server!\r\n");
-
-        /* Send initial message (optional) */
-        const char *msg = "Hello from STM32F746G!\r\n";
-        tcp_client_send(msg, strlen(msg));
-
     } else {
-        DEBUG_INFO("Connection failed: %d\r\n", err);
         client_state = TCP_STATE_ERROR;
     }
 
