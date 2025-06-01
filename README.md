@@ -8,22 +8,18 @@ Netcat - For TCP server
 
 ## Folder dir 
 f746g_TCP_basic/
-├── Core/                   # Main application code
-├── Drivers/                # STM32 HAL and BSP drivers
-├── LWIP/                   # LwIP TCP/IP stack
-├── TCP_App/                # Custom TCP client implementation
-│   ├── Inc/              
-│   │   ├── app_ethernet.h  # Ethernet management header
-│   │   ├── TCP_client.h    # TCP client interface
-│   │   └── uart_debug.h    # Debug output utilities
-│   └── Src/
-│       ├── app_ethernet.c  # Ethernet link management
-│       ├── TCP_client.c    # TCP client implementation
-│       └── uart_debug.c    # UART debug functions
-│
-└── Middlewares/            # Third-party middleware
-    └── Third_Party/
-        └── LwIP/           # LwIP source files
+├── Core/                    # Main application code
+├── Drivers/                 # STM32 HAL and BSP drivers
+├── LWIP/                    # LwIP TCP/IP stack
+└── TCP_App/                 # Custom TCP client implementation
+    ├── Inc/
+    │   ├── app_ethernet.h   # Ethernet management header
+    │   ├── TCP_client.h     # TCP client interface
+    │   └── uart_debug.h     # Debug output utilities
+    └── Src/
+        ├── app_ethernet.c   # Ethernet link management
+        ├── TCP_client.c     # TCP client implementation
+        └── uart_debug.c     # UART debug functions
 
 ## Sample Output
 
